@@ -1,51 +1,48 @@
 use nalgebra_glm::{Vec3, dot, cross};
-use crate::ray_intersect::RayIntersect;
+use crate::ray_intersect::{RayIntersect, Intersect};
+use crate::material::Material;
 
 pub struct Square {
     pub center: Vec3,       // Centro del cuadrado
     pub normal: Vec3,       // Vector normal del plano del cuadrado
-    pub side_length: f32,   // Longitud del lado del cuadrado
+    pub size: f32,   // Longitud del lado del cuadrado
+    pub material: Material,
 }
 
-impl RayIntersect for Square {
-    fn ray_intersect(&self, ray_origin: &Vec3, ray_direction: &Vec3) -> bool {
-        // Paso 1: Calcula la intersección del rayo con el plano del cuadrado.
-        // El plano está definido por el punto `center` y el vector normal `normal`.
-        let denom = dot(&self.normal, ray_direction);
-
-        // Si el denominador es cero, el rayo es paralelo al plano, no hay intersección
-        if denom.abs() < f32::EPSILON {
-            return false;
+impl Square {
+    pub fn ray_intersect(&self, origin: &Vec3, direction: &Vec3) -> Intersect {
+        let denom = self.normal.dot(direction);
+        
+        // Si el rayo es paralelo al plano del cuadrado, no hay intersección
+        if denom.abs() < 1e-6 {
+            return Intersect::empty();
         }
 
-        // Calcula la distancia desde el origen del rayo al plano
-        let t = dot(&(self.center - ray_origin), &self.normal) / denom;
-
-        // Si t es negativo, el cuadrado está detrás del origen del rayo
-        if t < 0.0 {
-            return false;
+        // Encuentra la distancia desde el origen del rayo al plano del cuadrado
+        let d = (self.center - *origin).dot(&self.normal) / denom;
+        if d < 0.0 {
+            return Intersect::empty();  // El cuadrado está detrás del origen del rayo
         }
 
-        // Paso 2: Calcula el punto de intersección en el plano
-        let intersection_point = ray_origin + ray_direction * t;
+        // Calcula el punto de intersección en el plano del cuadrado
+        let hit_point = origin + direction * d;
 
-        // Paso 3: Verifica si el punto de intersección está dentro del cuadrado
-        // El cuadrado está en un plano, por lo que necesitamos verificar si el punto está dentro de los límites.
-        // Vamos a proyectar el punto de intersección sobre las direcciones de los ejes del cuadrado.
+        // Chequea si el punto de intersección está dentro de los límites del cuadrado
+        let local_hit_point = hit_point - self.center;
+        let half_size = self.size / 2.0;
 
-        // Asumamos que el cuadrado está alineado con dos vectores ortogonales en el plano.
-        // Calculamos los vectores de los bordes del cuadrado a partir del normal (esto puede variar si el cuadrado está rotado).
-        let edge1 = cross(&self.normal, &Vec3::new(1.0, 0.0, 0.0)).normalize(); // Primer eje del cuadrado
-        let edge2 = cross(&self.normal, &edge1).normalize(); // Segundo eje ortogonal del cuadrado
-
-        // Calculamos las distancias desde el centro del cuadrado hasta el punto de intersección en los ejes locales del cuadrado.
-        let local_point = intersection_point - self.center;
-
-        let dist_edge1 = dot(&local_point, &edge1).abs();
-        let dist_edge2 = dot(&local_point, &edge2).abs();
-
-        // El punto está dentro del cuadrado si está dentro de los límites en ambos ejes.
-        let half_side = self.side_length / 2.0;
-        dist_edge1 <= half_side && dist_edge2 <= half_side
+        if local_hit_point.x.abs() <= half_size && local_hit_point.y.abs() <= half_size {
+            Intersect {
+                point: hit_point,
+                normal: self.normal,
+                distance: d,
+                is_intersecting: true,
+                material: self.material.clone(),
+                u: 0.0,  // coordenadas UV para texturizado
+                v: 0.0,
+            }
+        } else {
+            Intersect::empty()  // No está dentro de los límites del cuadrado
+        }
     }
 }
