@@ -34,23 +34,25 @@ impl Camera {
     pub fn orbit(&mut self, delta_yaw: f32, delta_pitch: f32) {
         let radius_vector = self.eye - self.center;
         let radius = radius_vector.magnitude();
-
+        
         let current_yaw = radius_vector.z.atan2(radius_vector.x);
-
+        
         let radius_xz = (radius_vector.x * radius_vector.x + radius_vector.z * radius_vector.z).sqrt();
-        let current_pitch = (-radius_vector.y).atan2(radius_xz);
-
+        
+        // Calculate current yaw
+        let current_pitch = (- radius_vector.y).atan2(radius_xz);
+        
+        // Calculate new yaw (horizontal) and pitch (vertical).
         let new_yaw = (current_yaw + delta_yaw) % (2.0 * PI);
         let new_pitch = (current_pitch + delta_pitch).clamp(-PI / 2.0 + 0.1, PI / 2.0 - 0.1);
-
+        
         let new_eye = self.center + Vec3::new(
             radius * new_yaw.cos() * new_pitch.cos(),
             -radius * new_pitch.sin(),
             radius * new_yaw.sin() * new_pitch.cos()
         );
-
-        self.eye = new_eye;
         self.has_changed = true;
+        self.eye = new_eye;
     }
 
     pub fn zoom(&mut self, delta: f32) {
