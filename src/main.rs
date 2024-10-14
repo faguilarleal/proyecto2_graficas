@@ -1,4 +1,6 @@
 use nalgebra_glm::{Vec3, normalize};
+use once_cell::sync::Lazy;
+use std::sync::Arc;
 use minifb::{Key, Window, WindowOptions};
 use std::time::Duration;
 use std::f32::consts::PI;
@@ -23,7 +25,10 @@ use camera::Camera;
 use light::Light;
 use material::Material;
 use cube::Cube;
+use texture::Texture;
 use square::Square;
+
+static TEXTURE1: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks_normal.png")));
 
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, light: &Light) {
     let width = framebuffer.width as f32;
@@ -94,7 +99,7 @@ fn main() {
     let rubber = Material::new_with_texture(
         1.0,
         [0.9, 0.1, 0.0, 0.0],
-        0.0,
+        1.0, TEXTURE1.clone(),
     );
 
     let ivory = Material::new(
@@ -133,12 +138,7 @@ fn main() {
     let objects=[
         Cube{min: Vec3::new(0.0, 0.0, -0.5),
             max: Vec3::new(1.0, 1.0, 1.0),
-            material: Material::new(
-        Color::new(255, 100, 80),
-        1.0,
-        [0.9, 0.1, 0.0, 0.0],
-        0.0,),
-                },
+            material: rubber,},
     ];
 
     // Initialize camera

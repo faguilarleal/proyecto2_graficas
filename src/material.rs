@@ -20,6 +20,7 @@ pub struct Material {
   pub refractive_index: f32,
   pub has_texture: bool,
   pub has_normal_map: bool,
+  pub texture: Option<Arc<Texture>>,
 }
 
 impl Material {
@@ -36,6 +37,7 @@ impl Material {
       refractive_index,
       has_texture: false,
       has_normal_map: false,
+      texture: None,
     }
   }
 
@@ -43,14 +45,16 @@ impl Material {
     specular: f32,
     albedo: [f32; 4],
     refractive_index: f32,
+    texture: Arc<Texture>,
   ) -> Self {
     Material {
-      diffuse: Color::new(0, 0, 0), // Default color, will be overridden by texture
+      diffuse: Color::new(255, 255, 255), // Color difuso por defecto
       specular,
       albedo,
       refractive_index,
       has_texture: true,
-      has_normal_map: true,
+      has_normal_map: false,
+      texture: Some(texture),
     }
   }
 
@@ -90,6 +94,7 @@ impl Material {
       albedo: [0.0, 0.0, 0.0, 0.0],
       refractive_index: 0.0,
       has_texture: false,
+      texture: None,
       has_normal_map: false,
     }
   }
