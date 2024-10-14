@@ -25,7 +25,7 @@ use material::Material;
 use cube::Cube;
 use square::Square;
 
-pub fn render(framebuffer: &mut Framebuffer, objects: &[Square], camera: &Camera, light: &Light) {
+pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, light: &Light) {
     let width = framebuffer.width as f32;
     let height = framebuffer.height as f32;
     let aspect_ratio = width / height;
@@ -118,17 +118,28 @@ fn main() {
     //     // Sphere { center: Vec3::new(-2.0, 2.0, -5.0), radius: 1.0, material: ivory },
     // ];
 
-    let objects = [
-        Square{center: Vec3::new(0.0, 0.0, 0.0),
-        size: 2.0,
-        normal: Vec3::new(0.0, 0.0, 1.0),  // cuadrado orientado hacia el eje Z
-        material: Material::new(
-            Color::new(255, 100, 80),
-            1.0,
-            [0.9, 0.1, 0.0, 0.0],
-            0.0,),
-        },
-    ];     
+    // let objects = [
+    //     Square{center: Vec3::new(0.0, 0.0, 0.0),
+    //     size: 2.0,
+    //     normal: Vec3::new(0.0, 0.0, 1.0),  // cuadrado orientado hacia el eje Z
+    //     material: Material::new(
+    //         Color::new(255, 100, 80),
+    //         1.0,
+    //         [0.9, 0.1, 0.0, 0.0],
+    //         0.0,),
+    //     },
+    // ];     
+
+    let objects=[
+        Cube{min: Vec3::new(0.0, 0.0, -0.5),
+            max: Vec3::new(1.0, 1.0, 1.0),
+            material: Material::new(
+        Color::new(255, 100, 80),
+        1.0,
+        [0.9, 0.1, 0.0, 0.0],
+        0.0,),
+                },
+    ];
 
     // Initialize camera
     let mut camera = Camera::new(

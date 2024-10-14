@@ -54,7 +54,7 @@ pub fn refract(incident: &Vec3, normal: &Vec3, eta_t: f32) -> Vec3 {
 pub fn cast_shadow(
     intersect: &Intersect,
     light: &Light,
-    objects: &[Square],
+    objects: &[Cube],
 ) -> f32 {
     let light_dir = (light.position - intersect.point).normalize();
     let light_distance = (light.position - intersect.point).magnitude();
@@ -79,7 +79,7 @@ pub fn cast_shadow(
 pub fn cast_ray(
     ray_origin: &Vec3,
     ray_direction: &Vec3,
-    objects: &[Square],
+    objects: &[Cube],
     light: &Light,
     depth: u32, // this value should initially be 0
                 // and should be increased by 1 in each recursion
