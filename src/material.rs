@@ -15,6 +15,9 @@ pub struct Material {
   pub has_texture: bool,
   pub has_normal_map: bool,
   pub texture: Option<Arc<Texture>>,
+  pub emission: Color,            // Color de la emisión
+  pub emission_strength: f32,     // Intensidad de la emisión
+  pub has_emission: bool, // Si el material usa una textura para la emisión
 }
 
 impl Material {
@@ -23,6 +26,7 @@ impl Material {
     specular: f32,
     albedo: [f32; 4],
     refractive_index: f32,
+    
   ) -> Self {
     Material {
       diffuse,
@@ -32,14 +36,57 @@ impl Material {
       has_texture: false,
       has_normal_map: false,
       texture: None,
+      emission: Color::new(0, 0, 0),
+      emission_strength: 0.0,
+      has_emission: false,
     }
   }
+
+  pub fn new_with_emission_texture(
+    specular: f32,
+    albedo: [f32; 4],
+    refractive_index: f32,
+    texture: Arc<Texture>,
+    emission: Color,
+    emission_strength: f32,
+) -> Self {
+    Material {
+        diffuse: Color::new(255, 255, 255), // Color difuso por defecto
+        specular,
+        albedo,
+        refractive_index,
+        has_texture: true,
+        has_normal_map: false,
+        texture: Some(texture),
+        emission,
+        emission_strength,
+        has_emission: true,
+    }
+}
+
+pub fn get_emission_color(&self, u: f32, v: f32) -> Color {
+  if self.has_emission {
+      // Si el material tiene una textura de emisión, tomar el color de la textura
+      let texture = self.texture.as_ref().unwrap();
+      let x = (u * (texture.width as f32 - 1.0)) as usize;
+      let y = ((1.0 - v) * (texture.height as f32 - 1.0)) as usize;
+      let tex_color = texture.get_color(x, y);
+      Color::new(
+          (tex_color.r as f32 * self.emission_strength) as u8,
+          (tex_color.g as f32 * self.emission_strength) as u8,
+          (tex_color.b as f32 * self.emission_strength) as u8,
+      )
+  } else {
+      self.emission
+  }
+}
 
   pub fn new_with_texture(
     specular: f32,
     albedo: [f32; 4],
     refractive_index: f32,
     texture: Arc<Texture>,
+
   ) -> Self {
     Material {
       diffuse: Color::new(255, 255, 255), // Color difuso por defecto
@@ -49,6 +96,9 @@ impl Material {
       has_texture: true,
       has_normal_map: false,
       texture: Some(texture),
+      emission: Color::new(0, 0, 0),
+      emission_strength: 0.0,
+      has_emission: false,
     }
   }
 
@@ -93,6 +143,9 @@ impl Material {
       has_texture: false,
       texture: None,
       has_normal_map: false,
+      emission: Color::new(0, 0, 0),
+      emission_strength: 0.0,
+      has_emission: false,
     }
   }
 }

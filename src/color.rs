@@ -1,4 +1,6 @@
 use std::fmt;
+use std::ops::AddAssign;
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -73,3 +75,10 @@ impl fmt::Display for Color {
     }
 }
 
+impl AddAssign for Color {
+    fn add_assign(&mut self, other: Color) {
+        self.r += other.r;
+        self.g += other.g;
+        self.b += other.b;
+    }
+}

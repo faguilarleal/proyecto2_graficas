@@ -21,6 +21,16 @@ pub fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
     incident - 2.0 * incident.dot(normal) * normal
 }
 
+fn compute_lighting(position: Vec3, normal: Vec3, light: &Light) -> Vec3 {
+    let light_dir = (light.position - position).normalize();
+    let diff = normal.dot(&light_dir).max(0.0);
+
+    // Calcula el color de la luz
+    let light_color = light.color * diff * light.intensity;
+
+    return Vec3::new(light_color.r as f32, light_color.g as f32, light_color.b as f32);
+}
+
 // maneja los rayos que entran y salen del ofecto dependiendo de el indica de refraccion del objecto 
 pub fn refract(incident: &Vec3, normal: &Vec3, eta_t: f32) -> Vec3 {
     let cosi = -incident.dot(normal).max(-1.0).min(1.0);
@@ -101,6 +111,15 @@ pub fn cast_ray(
     if !intersect.is_intersecting {
         return SKYBOX_COLOR;  // Fondo de cielo por defecto si no hay intersección
     }
+
+    let material = &intersect.material;
+    let mut pixel_color = Color::new(0, 0, 0);
+
+    if material.has_emission {
+        let emission_color = material.get_emission_color(intersect.u, intersect.v);
+        pixel_color += emission_color; // Sumar el color de emisión
+    }
+
 
     // Inicializar los colores de difusión y especular
     let mut final_color = Color::black();
