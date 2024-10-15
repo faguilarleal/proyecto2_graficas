@@ -5,12 +5,6 @@ use nalgebra_glm::Vec3;
 use crate::color::Color;
 use crate::texture::Texture;
 
-// static BALL: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/ball.png")));
-// static BALL_NORMAL: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/ball_normal.png")));
-
-
-static BALL: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks.png")));
-static BALL_NORMAL: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks_normal.png")));
 
 #[derive(Debug, Clone)]
 pub struct Material {
@@ -73,10 +67,12 @@ impl Material {
 
   pub fn get_normal_from_map(&self, u: f32, v: f32) -> Vec3 {
     if self.has_normal_map {
-      let x = (u * (BALL_NORMAL.width as f32 - 1.0)) as usize;
-      let y = ((1.0 - v) * (BALL_NORMAL.height as f32 - 1.0)) as usize;
-      let color = BALL_NORMAL.get_color(x, y);
-
+      let texture = self.texture.as_ref().unwrap();
+      let x = (u * (texture.width as f32 - 1.0)) as usize;
+      let y = ((1.0 - v) * (texture.height as f32 - 1.0)) as usize;
+      let texture = self.texture.as_ref().unwrap();
+      let color = texture.get_color(x, y);
+    
       // Correctly decode the normal map
       let nx = (color.r as f32 / 255.0) * 2.0 - 1.0;
       let ny = (color.g as f32 / 255.0) * 2.0 - 1.0;

@@ -15,7 +15,6 @@ mod material;
 mod texture;
 mod castray;
 mod cube;
-mod square;
 
 use framebuffer::Framebuffer;
 use castray::{cast_ray};
@@ -26,9 +25,13 @@ use light::Light;
 use material::Material;
 use cube::Cube;
 use texture::Texture;
-use square::Square;
 
-static TEXTURE1: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks.png")));
+// texturas
+static DIRT_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/dirt.jpg")));
+static WATER_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/water.png")));
+static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.png")));
+// static LAVA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/lava.jpg")));
+
 
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, lights: &[Light]) {
     let width = framebuffer.width as f32;
@@ -89,18 +92,21 @@ fn main() {
     window.set_position(500, 500);
     window.update();
 
-    // let rubber = Material::new(
-    //     Color::new(255, 100, 80),
-    //     1.0,
-    //     [0.9, 0.1, 0.0, 0.0],
-    //     0.0,
-    // );
+   
 
-    let rubber = Material::new_with_texture(
+// -----------------   texturas  ---------------
+
+    let dirt = Material::new_with_texture(
         1.0,
         [0.9, 0.1, 0.0, 0.0],
-        1.0, TEXTURE1.clone(),
+        0.0, DIRT_TEXTURE.clone(),
     );
+
+    let water= Material::new_with_texture(
+        100.0, 
+        [0.1, 0.1, 0.0, 0.5],   // Albedo: reflejos bajos, transparencia alta
+        1.33,   
+                 WATER_TEXTURE.clone());
 
     let ivory = Material::new(
         Color::new(100, 100, 80),
@@ -109,39 +115,31 @@ fn main() {
         0.0,
     );
 
-    let glass = Material::new(
-        Color::new(255, 255, 255),
+    let glass = Material::new_with_texture(
         1425.0,
         [0.0, 10.0, 0.5, 0.5],
         0.3,
-    );
+        GLASS_TEXTURE.clone(),);
 
-    // let objects = [
-    //     Sphere { center: Vec3::new(0.0, 0.0, 0.0), radius: 1.0, material: rubber },
-    //     Sphere { center: Vec3::new(-1.0, -1.0, 1.5), radius: 0.5, material: ivory },
-    //     Sphere { center: Vec3::new(-0.3, 0.3, 1.5), radius: 0.3, material: glass },
-    //     // Sphere { center: Vec3::new(-2.0, 2.0, -5.0), radius: 1.0, material: ivory },
-    // ];
 
-    // let objects = [
-    //     Square{center: Vec3::new(0.0, 0.0, 0.0),
-    //     size: 2.0,
-    //     normal: Vec3::new(0.0, 0.0, 1.0),  // cuadrado orientado hacia el eje Z
-    //     material: Material::new(
-    //         Color::new(255, 100, 80),
-    //         1.0,
-    //         [0.9, 0.1, 0.0, 0.0],
-    //         0.0,),
-    //     },
-    // ];     
+    // ------------------- objetos ------------
 
     let objects=[
         Cube{min: Vec3::new(0.0, 0.0, 0.0),
             max: Vec3::new(1.0, 1.0, 1.0),
-            material: rubber.clone(),},
+            material: dirt.clone(),},
         Cube{min: Vec3::new(1.0, 0.0, 0.0),  // Segundo cubo desplazado a la derecha en el eje X
             max: Vec3::new(2.0, 1.0, 1.0),
-            material: glass.clone(),},
+            material: dirt.clone(),},
+        Cube{min: Vec3::new(2.0, 0.0, 0.0),  // Segundo cubo desplazado a la derecha en el eje X
+            max: Vec3::new(3.0, 1.0, 1.0),
+            material: water.clone(),},
+        Cube{min: Vec3::new(2.0, 1.0, 0.0),  // Segundo cubo desplazado a la derecha en el eje X
+            max: Vec3::new(3.0, 2.0, 1.0),
+            material: dirt.clone(),},      
+        Cube{min: Vec3::new(1.0, 1.0, 0.0),  // Segundo cubo desplazado a la derecha en el eje X
+            max: Vec3::new(2.0, 2.0, 1.0),
+            material: water.clone(),},  
     ];
 
     // Initialize camera
@@ -153,11 +151,6 @@ fn main() {
     let rotation_speed = PI/10.0;
     let zoom_speed = 1.0;
 
-    // let light = Light::new(
-    //     Vec3::new(-1.0, 10.0, 1.0),
-    //     Color::new(255, 255, 255),
-    //     1.0
-    // );
 
 
     // Definir dos luces con diferentes posiciones
@@ -201,24 +194,24 @@ fn main() {
         }
 
         //  camera orbit controls
-        if window.is_key_down(Key::Left) {
+        if window.is_key_down(Key::A) {
             camera.orbit(rotation_speed, 0.0);
         }
-        if window.is_key_down(Key::Right) {
+        if window.is_key_down(Key::D) {
             camera.orbit(-rotation_speed, 0.0);
         }
-        if window.is_key_down(Key::Up) {
+        if window.is_key_down(Key::W) {
             camera.orbit(0.0, -rotation_speed);
         }
-        if window.is_key_down(Key::Down) {
+        if window.is_key_down(Key::S) {
             camera.orbit(0.0, rotation_speed);
         }
 
         // camera zoom controls
-        if window.is_key_down(Key::Q) {
+        if window.is_key_down(Key::Up) {
             camera.zoom(zoom_speed);
         }
-        if window.is_key_down(Key::E) {
+        if window.is_key_down(Key::Down) {
             camera.zoom(-zoom_speed);
         }
 

@@ -2,7 +2,6 @@ use crate::ray_intersect::{RayIntersect, Intersect};
 use crate::color::Color;
 use crate::light::Light;
 use crate::cube::Cube;
-use crate::square::Square;
 use nalgebra_glm::{Vec3, normalize};
 
 const ORIGIN_BIAS: f32 = 1e-4;
