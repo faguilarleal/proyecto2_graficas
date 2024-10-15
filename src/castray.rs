@@ -80,17 +80,17 @@ pub fn cast_ray(
     ray_origin: &Vec3,
     ray_direction: &Vec3,
     objects: &[Cube],
-    light: &Light,
-    depth: u32, // this value should initially be 0
-                // and should be increased by 1 in each recursion
+    lights: &[Light],  // Ahora acepta un arreglo de luces
+    depth: u32,        // Recursión de reflexión/refracción
 ) -> Color {
-    if depth > 3 {  // default recursion depth
-        return SKYBOX_COLOR; // Max recursion depth reached
+    if depth > 3 {
+        return SKYBOX_COLOR;
     }
 
     let mut intersect = Intersect::empty();
     let mut zbuffer = f32::INFINITY;
 
+    // Buscar la intersección más cercana
     for object in objects {
         let i = object.ray_intersect(ray_origin, ray_direction);
         if i.is_intersecting && i.distance < zbuffer {
@@ -100,40 +100,50 @@ pub fn cast_ray(
     }
 
     if !intersect.is_intersecting {
-        // return default sky box color
-        return SKYBOX_COLOR;
+        return SKYBOX_COLOR;  // Fondo de cielo por defecto si no hay intersección
     }
 
-    let light_dir = (light.position - intersect.point).normalize();
-    let view_dir = (ray_origin - intersect.point).normalize();
-    let reflect_dir = reflect(&-light_dir, &intersect.normal).normalize();
+    // Inicializar los colores de difusión y especular
+    let mut final_color = Color::black();
 
-    let shadow_intensity = cast_shadow(&intersect, light, objects);
-    let light_intensity = light.intensity * (1.0 - shadow_intensity);
+    // Iterar sobre todas las luces para acumular contribuciones
+    for light in lights {
+        let light_dir = (light.position - intersect.point).normalize();
+        let view_dir = (ray_origin - intersect.point).normalize();
+        let reflect_dir = reflect(&-light_dir, &intersect.normal).normalize();
 
-    let diffuse_intensity = intersect.normal.dot(&light_dir).max(0.0).min(1.0);
-    let diffuse_color = intersect.material.get_diffuse_color(intersect.u, intersect.v);
-    let diffuse = diffuse_color * intersect.material.albedo[0] * diffuse_intensity * light_intensity;
+        let shadow_intensity = cast_shadow(&intersect, light, objects);
+        let light_intensity = light.intensity * (1.0 - shadow_intensity);
 
-    let specular_intensity = view_dir.dot(&reflect_dir).max(0.0).powf(intersect.material.specular);
-    let specular = light.color * intersect.material.albedo[1] * specular_intensity * light_intensity;
+        // Componente difusa
+        let diffuse_intensity = intersect.normal.dot(&light_dir).max(0.0).min(1.0);
+        let diffuse_color = intersect.material.get_diffuse_color(intersect.u, intersect.v);
+        let diffuse = diffuse_color * intersect.material.albedo[0] * diffuse_intensity * light_intensity;
 
+        // Componente especular
+        let specular_intensity = view_dir.dot(&reflect_dir).max(0.0).powf(intersect.material.specular);
+        let specular = light.color * intersect.material.albedo[1] * specular_intensity * light_intensity;
+
+        // Sumar la contribución de esta luz al color final
+        final_color = final_color + diffuse + specular;
+    }
+
+    // Manejo de reflejos y refracciones
     let mut reflect_color = Color::black();
     let reflectivity = intersect.material.albedo[2];
     if reflectivity > 0.0 {
         let reflect_dir = reflect(&ray_direction, &intersect.normal).normalize();
         let reflect_origin = offset_origin(&intersect, &reflect_dir);
-        reflect_color = cast_ray(&reflect_origin, &reflect_dir, objects, light, depth + 1);
+        reflect_color = cast_ray(&reflect_origin, &reflect_dir, objects, lights, depth + 1);
     }
-
 
     let mut refract_color = Color::black();
     let transparency = intersect.material.albedo[3];
     if transparency > 0.0 {
         let refract_dir = refract(&ray_direction, &intersect.normal, intersect.material.refractive_index);
         let refract_origin = offset_origin(&intersect, &refract_dir);
-        refract_color = cast_ray(&refract_origin, &refract_dir, objects, light, depth + 1);
+        refract_color = cast_ray(&refract_origin, &refract_dir, objects, lights, depth + 1);
     }
 
-    (diffuse + specular) * (1.0 - reflectivity - transparency) + (reflect_color * reflectivity) + (refract_color * transparency)
+    final_color * (1.0 - reflectivity - transparency) + reflect_color * reflectivity + refract_color * transparency
 }

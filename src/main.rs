@@ -28,9 +28,9 @@ use cube::Cube;
 use texture::Texture;
 use square::Square;
 
-static TEXTURE1: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks_normal.png")));
+static TEXTURE1: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/bricks.png")));
 
-pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, light: &Light) {
+pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, lights: &[Light]) {
     let width = framebuffer.width as f32;
     let height = framebuffer.height as f32;
     let aspect_ratio = width / height;
@@ -61,7 +61,7 @@ pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, 
             let rotated_direction = camera.basis_change(&ray_direction);
 
             // Cast the ray and get the pixel color
-            let pixel_color = cast_ray(&camera.eye, &rotated_direction, objects, light, 0);
+            let pixel_color = cast_ray(&camera.eye, &rotated_direction, objects, lights, 0);
 
             // Draw the pixel on screen with the returned color
             framebuffer.set_current_color(pixel_color.to_hex());
@@ -136,25 +136,63 @@ fn main() {
     // ];     
 
     let objects=[
-        Cube{min: Vec3::new(0.0, 0.0, -0.5),
+        Cube{min: Vec3::new(0.0, 0.0, 0.0),
             max: Vec3::new(1.0, 1.0, 1.0),
-            material: rubber,},
+            material: rubber.clone(),},
+        Cube{min: Vec3::new(1.0, 0.0, 0.0),  // Segundo cubo desplazado a la derecha en el eje X
+            max: Vec3::new(2.0, 1.0, 1.0),
+            material: glass.clone(),},
     ];
 
     // Initialize camera
     let mut camera = Camera::new(
-        Vec3::new(0.0, 0.0, 5.0),  // eye: Initial camera position
-        Vec3::new(0.0, 0.0, 0.0),  // center: Point the camera is looking at (origin)
-        Vec3::new(0.0, 1.0, 0.0)   // up: World up vector
+        Vec3::new(5.0, 5.0, 5.0),  // eye: Nueva posición de la cámara en diagonal
+        Vec3::new(0.0, 0.0, 0.0),  // center: El cubo está en el origen
+        Vec3::new(0.0, 1.0, 0.0)   // up: El eje "arriba" sigue siendo el eje Y
     );
-    let rotation_speed = PI/50.0;
-    let zoom_speed = 0.1;
+    let rotation_speed = PI/10.0;
+    let zoom_speed = 1.0;
 
-    let light = Light::new(
-        Vec3::new(1.0, -1.0, 5.0),
-        Color::new(255, 255, 255),
-        1.0
-    );
+    // let light = Light::new(
+    //     Vec3::new(-1.0, 10.0, 1.0),
+    //     Color::new(255, 255, 255),
+    //     1.0
+    // );
+
+
+    // Definir dos luces con diferentes posiciones
+    let lights = vec![
+        Light {
+            position: Vec3::new(5.0, 10.0, 5.0),  // Luz desde arriba (cara superior)
+            intensity: 1.0,
+            color: Color::new(255, 255, 255),
+        },
+        // Light {
+        //     position: Vec3::new(0.0, -10.0, 0.0),  // Luz desde abajo (cara inferior)
+        //     intensity: 0.8,
+        //     color: Color::new(255, 255, 255),
+        // },
+        // Light {
+        //     position: Vec3::new(-10.0, 0.0, 0.0),  // Luz desde la izquierda (cara izquierda)
+        //     intensity: 0.8,
+        //     color: Color::new(255, 255, 255),
+        // },
+        // Light {
+        //     position: Vec3::new(10.0, 0.0, 0.0),  // Luz desde la derecha (cara derecha)
+        //     intensity: 0.8,
+        //     color: Color::new(255, 255, 255),
+        // },
+        // Light {
+        //     position: Vec3::new(0.0, 0.0, 10.0),  // Luz desde adelante (cara frontal)
+        //     intensity: 0.8,
+        //     color: Color::new(255, 255, 255),
+        // },
+        // Light {
+        //     position: Vec3::new(0.0, 0.0, -10.0),  // Luz desde atrás (cara trasera)
+        //     intensity: 0.8,
+        //     color: Color::new(255, 255, 255),
+        // },
+    ];
 
     while window.is_open() {
         // listen to inputs
@@ -186,7 +224,7 @@ fn main() {
 
         if camera.is_changed() {
             // Render the scene
-            render(&mut framebuffer, &objects, &camera, &light);
+            render(&mut framebuffer, &objects, &camera, &lights[..]);
         }
 
         // update the window with the framebuffer contents

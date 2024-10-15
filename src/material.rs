@@ -60,9 +60,10 @@ impl Material {
 
   pub fn get_diffuse_color(&mut self, u: f32, v: f32) -> Color {
     if self.has_texture {
-      let x = (u * (BALL.width as f32 - 1.0)) as usize;
-      let y = ((1.0 - v) * (BALL.height as f32 - 1.0)) as usize;
-      BALL.get_color(x, y)
+      let texture = self.texture.as_ref().unwrap();
+      let x = (u * (texture.width as f32 - 1.0)) as usize;
+      let y = ((1.0 - v) * (texture.height as f32 - 1.0)) as usize;
+      texture.get_color(x, y)
       // Color::new(255, 0, 0)
     }
     else {

@@ -11,26 +11,26 @@ pub struct Cube {
 impl Cube {
     // Obtén las coordenadas UV para el cubo
     fn get_uv(&self, point: &Vec3) -> (f32, f32) {
-        // Determina qué cara del cubo se está intersectando
         let mut u = 0.0;
         let mut v = 0.0;
 
-        if point.x == self.min.x { // Cara izquierda
+        // Detecta cuál cara está intersectando y ajusta las coordenadas UV.
+        if (point.x - self.min.x).abs() < 1e-4 { // Cara izquierda
             u = (point.z - self.min.z) / (self.max.z - self.min.z);
             v = (point.y - self.min.y) / (self.max.y - self.min.y);
-        } else if point.x == self.max.x { // Cara derecha
+        } else if (point.x - self.max.x).abs() < 1e-4 { // Cara derecha
             u = (point.z - self.min.z) / (self.max.z - self.min.z);
             v = (point.y - self.min.y) / (self.max.y - self.min.y);
-        } else if point.y == self.min.y { // Cara inferior
+        } else if (point.y - self.min.y).abs() < 1e-4 { // Cara inferior
             u = (point.x - self.min.x) / (self.max.x - self.min.x);
             v = (point.z - self.min.z) / (self.max.z - self.min.z);
-        } else if point.y == self.max.y { // Cara superior
+        } else if (point.y - self.max.y).abs() < 1e-4 { // Cara superior
             u = (point.x - self.min.x) / (self.max.x - self.min.x);
             v = (point.z - self.min.z) / (self.max.z - self.min.z);
-        } else if point.z == self.min.z { // Cara trasera
+        } else if (point.z - self.min.z).abs() < 1e-4 { // Cara trasera
             u = (point.x - self.min.x) / (self.max.x - self.min.x);
             v = (point.y - self.min.y) / (self.max.y - self.min.y);
-        } else if point.z == self.max.z { // Cara delantera
+        } else if (point.z - self.max.z).abs() < 1e-4 { // Cara delantera
             u = (point.x - self.min.x) / (self.max.x - self.min.x);
             v = (point.y - self.min.y) / (self.max.y - self.min.y);
         }
@@ -38,7 +38,6 @@ impl Cube {
         (u, v)
     }
 }
-
 
 impl RayIntersect for Cube {
     fn ray_intersect(&self, ray_origin: &Vec3, ray_direction: &Vec3) -> Intersect {
@@ -71,17 +70,17 @@ impl RayIntersect for Cube {
 
         // Para encontrar la normal de la cara intersectada
         let normal = if (intersection_point.x - self.min.x).abs() < 1e-4 {
-            Vec3::new(-1.0, 0.0, 0.0)
+            Vec3::new(-1.0, 0.0, 0.0) // Cara izquierda
         } else if (intersection_point.x - self.max.x).abs() < 1e-4 {
-            Vec3::new(1.0, 0.0, 0.0)
+            Vec3::new(1.0, 0.0, 0.0) // Cara derecha
         } else if (intersection_point.y - self.min.y).abs() < 1e-4 {
-            Vec3::new(0.0, -1.0, 0.0)
+            Vec3::new(0.0, -1.0, 0.0) // Cara inferior
         } else if (intersection_point.y - self.max.y).abs() < 1e-4 {
-            Vec3::new(0.0, 1.0, 0.0)
+            Vec3::new(0.0, 1.0, 0.0) // Cara superior
         } else if (intersection_point.z - self.min.z).abs() < 1e-4 {
-            Vec3::new(0.0, 0.0, -1.0)
+            Vec3::new(0.0, 0.0, -1.0) // Cara trasera
         } else {
-            Vec3::new(0.0, 0.0, 1.0)
+            Vec3::new(0.0, 0.0, 1.0) // Cara delantera
         };
 
         let normal = normal.normalize();
