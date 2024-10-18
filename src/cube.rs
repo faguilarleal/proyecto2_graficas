@@ -6,6 +6,7 @@ pub struct Cube {
     pub min: Vec3, // Una esquina del cubo
     pub max: Vec3, // La esquina opuesta del cubo
     pub material: Material,
+    pub has_shadow: bool, 
 }
 
 impl Cube {

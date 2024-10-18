@@ -5,7 +5,7 @@ use crate::cube::Cube;
 use nalgebra_glm::{Vec3, normalize};
 
 const ORIGIN_BIAS: f32 = 1e-4;
-const SKYBOX_COLOR: Color = Color::new(68, 142, 255);
+const SKYBOX_COLOR: Color = Color::new(253, 255, 146);
 
 
 pub fn offset_origin(intersect: &Intersect, direction: &Vec3) -> Vec3 {
@@ -64,6 +64,7 @@ pub fn cast_shadow(
     intersect: &Intersect,
     light: &Light,
     objects: &[Cube],
+    has_shadow: bool, 
 ) -> f32 {
     let light_dir = (light.position - intersect.point).normalize();
     let light_distance = (light.position - intersect.point).magnitude();
@@ -72,12 +73,16 @@ pub fn cast_shadow(
     let mut shadow_intensity = 0.0;
 
     for object in objects {
-        let shadow_intersect = object.ray_intersect(&shadow_ray_origin, &light_dir);
-        if shadow_intersect.is_intersecting && shadow_intersect.distance < light_distance {
-            let distance_ratio = shadow_intersect.distance / light_distance;
-            shadow_intensity = 1.0 - distance_ratio.powf(2.0).min(1.0);
-            break;
+        if has_shadow == false{
+            let shadow_intersect = object.ray_intersect(&shadow_ray_origin, &light_dir);
+            if shadow_intersect.is_intersecting && shadow_intersect.distance < light_distance {
+                let distance_ratio = shadow_intersect.distance / light_distance;
+                shadow_intensity = 1.0 - distance_ratio.powf(2.0).min(1.0);
+                // print!("funciona");
+                break;
+            }
         }
+        
     }
 
     shadow_intensity
@@ -130,7 +135,7 @@ pub fn cast_ray(
         let view_dir = (ray_origin - intersect.point).normalize();
         let reflect_dir = reflect(&-light_dir, &intersect.normal).normalize();
 
-        let shadow_intensity = cast_shadow(&intersect, light, objects);
+        let shadow_intensity = cast_shadow(&intersect, light, objects, false);
         let light_intensity = light.intensity * (1.0 - shadow_intensity);
 
         // Componente difusa

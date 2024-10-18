@@ -29,8 +29,9 @@ use texture::Texture;
 // texturas
 static DIRT_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/dirt.jpg")));
 static WATER_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/water.png")));
-static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.png")));
+static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.jpg")));
 static LAVA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/lava.jpg")));
+static MADERA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/madera.jpg")));
 
 
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, lights: &[Light]) {
@@ -103,23 +104,25 @@ fn main() {
     );
 
     let water= Material::new_with_texture(
-        100.0, 
-        [0.1, 0.1, 0.0, 0.5],   // Albedo: reflejos bajos, transparencia alta
-        1.33,   
-                 WATER_TEXTURE.clone());
+        50.0,                           // Especularidad baja, ajustada a la naturaleza del agua
+    [0.8, 0.2, 0.1, 0.3],           // Albedo: aumenta el azul en los reflejos, disminuye un poco la transparencia
+    1.33,                           // Índice de refracción del agua
+    WATER_TEXTURE.clone(), 
+                );
 
-    let ivory = Material::new(
-        Color::new(100, 100, 80),
-        50.0,
-        [0.6, 0.3, 0.6, 0.0],
-        0.0,
-    );
+            let madera = Material::new_with_texture(
+                1.0,
+                [0.9, 0.1, 0.0, 0.0],
+                0.0, MADERA_TEXTURE.clone(),           
+                 );
+                        
 
-    let glass = Material::new_with_texture(
-        300.0,
-        [0.0, 0.5, 0.1, 0.9],
-        1.5,
-        GLASS_TEXTURE.clone(),);
+                 let glass = Material::new_with_texture(
+                    10.0,                           // Especularidad baja
+                    [1.0, 1.0, 1.0, 0.05],          // Albedo con alta transparencia (0.05 en el canal alfa)
+                    1.5,                            // Índice de refracción del vidrio
+                    GLASS_TEXTURE.clone(),           // Textura de vidrio
+                );
 
     let lava= Material::new_with_texture(
         1.0,
@@ -128,7 +131,16 @@ fn main() {
     LAVA_TEXTURE.clone(),       // La textura del cubo
      );            // Intensidad de la emisión
         
-        
+// ------------ LUCES--------------
+// Definir dos luces con diferentes posiciones
+let mut lights = vec![
+    Light {
+        position: Vec3::new(0.0, 6.0, 10.0),  // Luz desde arriba (cara superior)
+        intensity: 1.0,
+        color: Color::new(255, 255, 255),
+    },
+   
+];
         
     // ------------------- objetos ------------
 
@@ -136,57 +148,118 @@ fn main() {
     let mut objects = Vec::new(); // Vec donde almacenaremos los cubos
 
     // Bucle anidado para generar cuadrícula 8x8
-    for row in -3..2{
-        for col in -3..2{
+    for row in -3..3{
+        for col in -3..3{
             let min = Vec3::new(col as f32 * cube_size, 0.0, row as f32 * cube_size);
             let max = Vec3::new(
                 (col as f32 + 1.0) * cube_size,
                 cube_size,
                 (row as f32 + 1.0) * cube_size
             );
+            // TEXTURA DE LAVA 
+            if row == 0 && col == 0 || row == 0 && col == 1 {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: lava.clone(), // Utiliza el mismo material para todos los cubos
+                    has_shadow: true, 
+                });
+                //  La luz emana desde la parte superior del cubo de lava
+                // let light_position = Vec3::new(
+                //     (col as f32 + 0.5) * cube_size,  // Centro del cubo en X
+                //     cube_size + 0.6,                       // Parte superior del cubo en Y
+                //     (row as f32 + 0.5) * cube_size   // Centro del cubo en Z
+                // );
 
-            objects.push(Cube {
-                min,
-                max,
-                material: dirt.clone(), // Utiliza el mismo material para todos los cubos
-            });
+                // lights.push(Light {
+                //     position: light_position,            // Posición en la parte superior del cubo
+                //     intensity: 0.6,
+                //     color: Color::new(255, 255, 255),    // Luz blanca
+                // });
+            }
+
+            else if  (row == -2 && col == -2) ||( row == -1 && col == -2) {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: dirt.clone(), // Utiliza el mismo material para todos los cubos
+                    has_shadow: true, 
+
+                });
+            }
+
+            // TEXTURA DE TIERRA
+            else {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: dirt.clone(), // Utiliza el mismo material para todos los cubos
+                    has_shadow: true, 
+                
+                });
+            }
         }
     }    
 
-    for row in -1..1{
-        for col in -1..1{
-            let min = Vec3::new(col as f32 * cube_size, 1.0, row as f32 * cube_size);
-            let max = Vec3::new(
-                (col as f32 + 1.0) * cube_size,
-                cube_size+1.0,
-                (row as f32 + 1.0) * cube_size
+    // for row in -2..-1{
+    //     for col in -2..-1{
+    //         let min = Vec3::new(col as f32 * cube_size, 1.0, row as f32 * cube_size);
+    //         let max = Vec3::new(
+    //             (col as f32 + 1.0) * cube_size,
+    //             cube_size+ 1.0,
+    //             (row as f32 + 1.0) * cube_size
+    //         );
+
+    //         objects.push(Cube {
+    //             min,
+    //             max,
+    //             material: dirt.clone(), // Utiliza el mismo material para todos los cubos
+    //             has_shadow: true, 
+    //         });
+    //     }
+    // } 
+
+
+    let wall_height = 5;  // Define la altura de la pared
+  
+    // Crea una pared en un solo lado (a lo largo de X o Z)
+    for height in 1..wall_height {  // Loop para la altura de la pared (de 0 a wall_height)
+        for row in -3..3 {  // Rango horizontal de la pared (columna única, es decir, solo una pared)
+            let min = Vec3::new(
+                row as f32 * cube_size,       // Posición en X (horizontal, solo en un lado)
+                height as f32 * cube_size,    // Posición en Y (altura, que crece hacia arriba)
+                2.0                           // Posición fija en Z (o cambia a X para variar)
             );
-
-            objects.push(Cube {
-                min,
-                max,
-                material: water.clone(), // Utiliza el mismo material para todos los cubos
-            });
-        }
-    } 
-
-    for row in -3..-2{
-        for col in -3..-2{
-            let min = Vec3::new(col as f32 * cube_size, 1.0, row as f32 * cube_size);
             let max = Vec3::new(
-                (col as f32 + 1.0) * cube_size,
-                cube_size+1.0,
-                (row as f32 + 1.0) * cube_size
+                (row as f32 + 1.0) * cube_size,
+                (height as f32 + 1.0) * cube_size,
+                cube_size +2.0                    // Altura de la pared
             );
-
-            objects.push(Cube {
-                min,
-                max,
-                material: lava.clone(), // Utiliza el mismo material para todos los cubos
-            });
+            
+            // Ventanas en las orillas (fila más baja y más alta)
+            if (row == 1 ) && height >= 2 && height <= 3 {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: glass.clone(),  // Material de la ventana
+                    has_shadow: true, 
+                });
+            }
+            // Pared (sin ventanas)
+            else {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: madera.clone(),  // Material de la pared
+                    has_shadow: true,
+                });
+            }
         }
-    } 
+    }
+    
 
+
+   
     // Initialize camera
     let mut camera = Camera::new(
         Vec3::new(5.0, 5.0, 5.0),  // eye: Nueva posición de la cámara en diagonal
@@ -198,45 +271,7 @@ fn main() {
 
 
 
-    // Definir dos luces con diferentes posiciones
-    let lights = vec![
-        // Light {
-        //     position: Vec3::new(5.0, 10.0, 5.0),  // Luz desde arriba (cara superior)
-        //     intensity: 1.0,
-        //     color: Color::new(255, 255, 255),
-        // },
-        Light {
-            position: Vec3::new(0.0, -10.0, 0.0),  // Luz desde abajo (cara inferior)
-            intensity: 0.8,
-            color: Color::new(255, 255, 255),
-        },
-
-        Light {
-            position: Vec3::new(-2.5, 1.5, -1.5),  // Luz desde abajo (cara inferior)
-            intensity: 0.9,
-            color: Color::new(255, 255, 255),
-        },
-        // Light {
-        //     position: Vec3::new(-10.0, 0.0, 0.0),  // Luz desde la izquierda (cara izquierda)
-        //     intensity: 0.8,
-        //     color: Color::new(255, 255, 255),
-        // },
-        // Light {
-        //     position: Vec3::new(10.0, 0.0, 0.0),  // Luz desde la derecha (cara derecha)
-        //     intensity: 0.8,
-        //     color: Color::new(255, 255, 255),
-        // },
-        // Light {
-        //     position: Vec3::new(0.0, 0.0, 10.0),  // Luz desde adelante (cara frontal)
-        //     intensity: 0.8,
-        //     color: Color::new(255, 255, 255),
-        // },
-        // Light {
-        //     position: Vec3::new(0.0, 0.0, -10.0),  // Luz desde atrás (cara trasera)
-        //     intensity: 0.8,
-        //     color: Color::new(255, 255, 255),
-        // },
-    ];
+    
 
     while window.is_open() {
         // listen to inputs
