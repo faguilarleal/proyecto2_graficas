@@ -167,7 +167,7 @@ let mut lights = vec![
     Light {
         position: Vec3::new(1.0, 4.0, 10.0),  // Luz desde arriba (cara superior)
         // position: Vec3::new(10.0, 10.0, 10.0),  // Luz desde arriba (cara superior)
-        intensity: 1.0,
+        intensity: 0.8,
         color: Color::new(255, 255, 255),
     },
    
@@ -175,7 +175,7 @@ let mut lights = vec![
         
     // ------------------- objetos ------------
 
-    let cube_size = 1.0; // Tamaño de cada cubo
+    let cube_size = 0.5; // Tamaño de cada cubo
     let mut objects = Vec::new(); // Vec donde almacenaremos los cubos
 
     // Bucle anidado para generar cuadrícula 8x8
@@ -205,8 +205,8 @@ let mut lights = vec![
 
                 lights.push(Light {
                     position: light_position,            // Posición en la parte superior del cubo
-                    intensity: 0.7,
-                    color: Color::new(255, 255, 255),    // Luz blanca
+                    intensity: 0.3,
+                    color: Color::new(238, 163, 79),    // Luz blanca
                 });
             }
 
@@ -241,11 +241,11 @@ let mut lights = vec![
             let min = Vec3::new(
                 row as f32 * cube_size,
                 height as f32 * cube_size,
-                -3.0);
+                -1.5);
             let max = Vec3::new(
                 (row as f32 + 1.0) * cube_size,
                 (height as f32+ 1.0) * cube_size,
-                cube_size- 3.0
+                cube_size- 1.5
             );
 
 
@@ -278,11 +278,11 @@ let mut lights = vec![
         min:Vec3::new(
             -3 as f32 * cube_size,
             3 as f32 * cube_size,
-            -1.0), 
+            -0.5), 
         max:Vec3::new(
             -2 as f32 * cube_size,
             4 as f32 * cube_size,
-            -2.0), 
+            -1.0), 
         material: hojas.clone(), 
         has_shadow:true, 
         is_transparent: false,
@@ -291,11 +291,11 @@ let mut lights = vec![
         min:Vec3::new(
             -3 as f32 * cube_size,
             3 as f32 * cube_size,
-            -3.0), 
+            -2.0), 
         max:Vec3::new(
             -2 as f32 * cube_size,
             4 as f32 * cube_size,
-            -4.0), 
+            -1.5), 
         material: hojas.clone(), 
         has_shadow:true, 
         is_transparent: false,
@@ -309,12 +309,12 @@ let mut lights = vec![
             let min = Vec3::new(
                 row as f32 * cube_size,       // Posición en X (horizontal, solo en un lado)
                 height as f32 * cube_size,    // Posición en Y (altura, que crece hacia arriba)
-                2.0                           // Posición fija en Z (o cambia a X para variar)
+                1.0                           // Posición fija en Z (o cambia a X para variar)
             );
             let max = Vec3::new(
                 (row as f32 + 1.0) * cube_size,
                 (height as f32 + 1.0) * cube_size,
-                cube_size +2.0                    // Altura de la pared
+                cube_size + 1.0                    // Altura de la pared
             );
             
             // Ventanas en las orillas (fila más baja y más alta)
@@ -345,14 +345,14 @@ let mut lights = vec![
                 });
                 let light_position = Vec3::new(
                     (row as f32 + 0.5) * cube_size,  // Centro del cubo en X
-                    cube_size + 0.6,                       // Parte superior del cubo en Y
+                    cube_size + 0.2,                       // Parte superior del cubo en Y
                     (height as f32 + 0.5) * cube_size   // Centro del cubo en Z
                 );
 
                 lights.push(Light {
                     position: light_position,            // Posición en la parte superior del cubo
                     intensity: 0.5,
-                    color: Color::new(255, 255, 255),    // Luz blanca
+                    color: Color::new(234, 210, 75),    // Luz blanca
                 });
             }
             // LIBRO
