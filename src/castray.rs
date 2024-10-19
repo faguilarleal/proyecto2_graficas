@@ -2,7 +2,7 @@ use crate::ray_intersect::{RayIntersect, Intersect};
 use crate::color::Color;
 use crate::light::Light;
 use crate::cube::Cube;
-use nalgebra_glm::{Vec3, normalize};
+use nalgebra_glm::{Vec3};
 
 const ORIGIN_BIAS: f32 = 1e-4;
 const SKYBOX_COLOR: Color = Color::new(253, 255, 146);
@@ -21,15 +21,6 @@ pub fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
     incident - 2.0 * incident.dot(normal) * normal
 }
 
-fn compute_lighting(position: Vec3, normal: Vec3, light: &Light) -> Vec3 {
-    let light_dir = (light.position - position).normalize();
-    let diff = normal.dot(&light_dir).max(0.0);
-
-    // Calcula el color de la luz
-    let light_color = light.color * diff * light.intensity;
-
-    return Vec3::new(light_color.r as f32, light_color.g as f32, light_color.b as f32);
-}
 
 // maneja los rayos que entran y salen del ofecto dependiendo de el indica de refraccion del objecto 
 pub fn refract(incident: &Vec3, normal: &Vec3, eta_t: f32) -> Vec3 {

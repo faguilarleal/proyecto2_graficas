@@ -17,9 +17,8 @@ mod castray;
 mod cube;
 
 use framebuffer::Framebuffer;
-use castray::{cast_ray};
+use castray::cast_ray;
 use color::Color;
-use ray_intersect::{Intersect, RayIntersect};
 use camera::Camera;
 use light::Light;
 use material::Material;
@@ -38,44 +37,46 @@ static TREE_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("as
 static HOJAS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/hojas.jpg")));
 
 
+use rayon::prelude::*;
+
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, lights: &[Light]) {
-    let width = framebuffer.width as f32;
-    let height = framebuffer.height as f32;
-    let aspect_ratio = width / height;
-    let fov = PI/3.0;
+    let width = framebuffer.width;
+    let height = framebuffer.height;
+    let aspect_ratio = width as f32 / height as f32;
+    let fov = PI / 3.0;
     let perspective_scale = (fov * 0.5).tan();
 
-    // random number generator
-    // let mut rng = rand::thread_rng();
+    framebuffer
+        .buffer
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(index, pixel)| {
+            let x = index % width;
+            let y = index / width;
 
-    for y in 0..framebuffer.height {
-        for x in 0..framebuffer.width {
-            // if rng.gen_range(0.0..1.0) < 0.9 {
-            //      continue;
-            // }
+            let screen_x = (2.0 * x as f32) / width as f32 - 1.0;
+            let screen_y = -(2.0 * y as f32) / height as f32 + 1.0;
 
-            // Map the pixel coordinate to screen space [-1, 1]
-            let screen_x = (2.0 * x as f32) / width - 1.0;
-            let screen_y = -(2.0 * y as f32) / height + 1.0;
-
-            // Adjust for aspect ratio and perspective 
             let screen_x = screen_x * aspect_ratio * perspective_scale;
             let screen_y = screen_y * perspective_scale;
 
-            // Calculate the direction of the ray for this pixel
             let ray_direction = normalize(&Vec3::new(screen_x, screen_y, -1.0));
-
-            // Apply camera rotation to the ray direction
             let rotated_direction = camera.basis_change(&ray_direction);
-
-            // Cast the ray and get the pixel color
             let pixel_color = cast_ray(&camera.eye, &rotated_direction, objects, lights, 0);
 
-            // Draw the pixel on screen with the returned color
-            framebuffer.set_current_color(pixel_color.to_hex());
-            framebuffer.point(x, y);
-        }
-    }
+            *pixel = pixel_color.to_hex();
+        });
+}
+
+
+
+fn update_sun_position(time: f32) -> Vec3 {
+    let radius = 15.0; // Radio de la órbita del sol
+    let angle = time;  // Controlar el ángulo de la órbita con el tiempo
+    let x = radius * angle.cos();
+    let y = radius * angle.sin(); // La altura del sol variará con el seno del ángulo
+    let z = 10.0; // El sol permanece en una altura fija en el eje Z
+    Vec3::new(x, y, z)
 }
 
 fn main() {
@@ -167,7 +168,7 @@ let mut lights = vec![
     Light {
         position: Vec3::new(1.0, 4.0, 10.0),  // Luz desde arriba (cara superior)
         // position: Vec3::new(10.0, 10.0, 10.0),  // Luz desde arriba (cara superior)
-        intensity: 0.8,
+        intensity: 1.0,
         color: Color::new(255, 255, 255),
     },
    
@@ -199,13 +200,13 @@ let mut lights = vec![
                 //  La luz emana desde la parte superior del cubo de lava
                 let light_position = Vec3::new(
                     (col as f32 + 0.5) * cube_size,  // Centro del cubo en X
-                    cube_size + 0.6,                       // Parte superior del cubo en Y
+                    cube_size + 0.5,                       // Parte superior del cubo en Y
                     (row as f32 + 0.5) * cube_size   // Centro del cubo en Z
                 );
 
                 lights.push(Light {
                     position: light_position,            // Posición en la parte superior del cubo
-                    intensity: 0.3,
+                    intensity: 0.6,
                     color: Color::new(238, 163, 79),    // Luz blanca
                 });
             }
@@ -391,11 +392,11 @@ let mut lights = vec![
         Vec3::new(0.0, 0.0, 0.0),  // center: El cubo está en el origen
         Vec3::new(0.0, 1.0, 0.0)   // up: El eje "arriba" sigue siendo el eje Y
     );
-    let rotation_speed = PI/8.0;
-    let zoom_speed = 1.5;
+    let rotation_speed = PI/50.0;
+    let zoom_speed = 0.5;
 
 
-
+    let mut time = 0.0;
     
 
     while window.is_open() {
@@ -426,10 +427,18 @@ let mut lights = vec![
             camera.zoom(-zoom_speed);
         }
 
-        if camera.is_changed() {
-            // Render the scene
-            render(&mut framebuffer, &objects, &camera, &lights[..]);
-        }
+        // if camera.is_changed() {
+        //     // Render the scene
+        //     render(&mut framebuffer, &objects, &camera, &lights[..]);
+        // }
+        let sun_position = update_sun_position(time);
+        lights[0].position = sun_position; // Mover la luz principal
+
+        // Incrementa el tiempo para simular el paso del día
+        time += 0.05; // Ajusta la velocidad del tiempo si es necesario
+
+        render(&mut framebuffer, &objects, &camera, &lights[..]);
+
 
         // update the window with the framebuffer contents
         window
