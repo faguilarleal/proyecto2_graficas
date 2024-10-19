@@ -32,6 +32,10 @@ static WATER_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("a
 static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.png")));
 static LAVA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/lava.jpg")));
 static MADERA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/madera.jpg")));
+static LIBRO_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/libro.jpg")));
+static HORNO_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/horno.jpg")));
+static TREE_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/tree.jpg")));
+static HOJAS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/hojas.jpg")));
 
 
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Cube], camera: &Camera, lights: &[Light]) {
@@ -128,8 +132,35 @@ fn main() {
         [0.9, 0.1, 0.0, 0.0],
         0.0,                // Índice de refracción (opcional)
     LAVA_TEXTURE.clone(),       // La textura del cubo
-     );            // Intensidad de la emisión
-        
+     );            
+
+    let libro= Material::new_with_texture(
+        1.0,
+        [0.9, 0.1, 0.0, 0.0],
+        0.0, 
+        LIBRO_TEXTURE.clone(),           
+            );        
+
+    let horno= Material::new_with_texture(
+        1.0,
+        [0.9, 0.1, 0.0, 0.0],
+        0.0, 
+        HORNO_TEXTURE.clone(),           
+            );  
+
+    let tree= Material::new_with_texture(
+        1.0,
+        [0.9, 0.1, 0.0, 0.0],
+        0.0, 
+        TREE_TEXTURE.clone(),           
+            );    
+    let hojas= Material::new_with_texture(
+        1.0,
+        [0.9, 0.1, 0.0, 0.1],
+        0.0, 
+        HOJAS_TEXTURE.clone(),           
+            );    
+
 // ------------ LUCES--------------
 // Definir dos luces con diferentes posiciones
 let mut lights = vec![
@@ -166,27 +197,28 @@ let mut lights = vec![
                     is_transparent:false
                 });
                 //  La luz emana desde la parte superior del cubo de lava
-                // let light_position = Vec3::new(
-                //     (col as f32 + 0.5) * cube_size,  // Centro del cubo en X
-                //     cube_size + 0.6,                       // Parte superior del cubo en Y
-                //     (row as f32 + 0.5) * cube_size   // Centro del cubo en Z
-                // );
+                let light_position = Vec3::new(
+                    (col as f32 + 0.5) * cube_size,  // Centro del cubo en X
+                    cube_size + 0.6,                       // Parte superior del cubo en Y
+                    (row as f32 + 0.5) * cube_size   // Centro del cubo en Z
+                );
 
-                // lights.push(Light {
-                //     position: light_position,            // Posición en la parte superior del cubo
-                //     intensity: 0.6,
-                //     color: Color::new(255, 255, 255),    // Luz blanca
-                // });
+                lights.push(Light {
+                    position: light_position,            // Posición en la parte superior del cubo
+                    intensity: 0.7,
+                    color: Color::new(255, 255, 255),    // Luz blanca
+                });
             }
 
-            else if  (row == -2 && col == -2) ||( row == -1 && col == -2) {
+            
+            // TEXTURA DE AGUA 
+            else if  (row == -2 && col == -1) ||( row == -1 && col == -1) ||( row == -2 && col == 0) {
                 objects.push(Cube {
                     min,
                     max,
-                    material: dirt.clone(), // Utiliza el mismo material para todos los cubos
+                    material: water.clone(), // Utiliza el mismo material para todos los cubos
                     has_shadow: true, 
                     is_transparent:false
-
                 });
             }
 
@@ -203,26 +235,71 @@ let mut lights = vec![
             }
         }
     }    
-
-    for row in 1..2{
-        for col in 1..2{
-            let min = Vec3::new(col as f32 * cube_size, row as f32 +2.0* cube_size, -0.0);
+// ARBOL
+    for height in 1..5{
+        for row in -4..-1{
+            let min = Vec3::new(
+                row as f32 * cube_size,
+                height as f32 * cube_size,
+                -3.0);
             let max = Vec3::new(
-                (col as f32 + 1.0) * cube_size,
-                (row as f32 + 3.0) * cube_size,
-                cube_size- 0.0
+                (row as f32 + 1.0) * cube_size,
+                (height as f32+ 1.0) * cube_size,
+                cube_size- 3.0
             );
 
-            objects.push(Cube {
-                min,
-                max,
-                material: dirt.clone(), // Utiliza el mismo material para todos los cubos
-                has_shadow: true, 
-                is_transparent:false
 
-            });
+            if row == -4 && height == 3 || row == -2 && height == 3 ||height == 4 && row != -2{
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: hojas.clone(), // Utiliza el mismo material para todos los cubos
+                    has_shadow: true, 
+                    is_transparent:false
+
+                });
+            }
+
+            
+            else if row == -3 {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: tree.clone(), // Utiliza el mismo material para todos los cubos
+                    has_shadow: true, 
+                    is_transparent:false
+
+                });
+            }
         }
     } 
+
+    objects.push(Cube{
+        min:Vec3::new(
+            -3 as f32 * cube_size,
+            3 as f32 * cube_size,
+            -1.0), 
+        max:Vec3::new(
+            -2 as f32 * cube_size,
+            4 as f32 * cube_size,
+            -2.0), 
+        material: hojas.clone(), 
+        has_shadow:true, 
+        is_transparent: false,
+    });
+    objects.push(Cube{
+        min:Vec3::new(
+            -3 as f32 * cube_size,
+            3 as f32 * cube_size,
+            -3.0), 
+        max:Vec3::new(
+            -2 as f32 * cube_size,
+            4 as f32 * cube_size,
+            -4.0), 
+        material: hojas.clone(), 
+        has_shadow:true, 
+        is_transparent: false,
+    });
 
     let wall_height = 5;  // Define la altura de la pared
   
@@ -251,6 +328,44 @@ let mut lights = vec![
 
                 });
             }
+            // NADA
+            // COL X ROW Y
+            else if  (row == -3 && height >= 2) ||( row == -2 && height >= 3)||( row == -1 && height >= 4) {
+            
+            }
+            // hORNO
+            else if  row == -2 && height == 1 {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: horno.clone(),  // Material de la pared
+                    has_shadow: true,
+                    is_transparent:false
+
+                });
+                let light_position = Vec3::new(
+                    (row as f32 + 0.5) * cube_size,  // Centro del cubo en X
+                    cube_size + 0.6,                       // Parte superior del cubo en Y
+                    (height as f32 + 0.5) * cube_size   // Centro del cubo en Z
+                );
+
+                lights.push(Light {
+                    position: light_position,            // Posición en la parte superior del cubo
+                    intensity: 0.5,
+                    color: Color::new(255, 255, 255),    // Luz blanca
+                });
+            }
+            // LIBRO
+            else if row == -1 && height == 1 {
+                objects.push(Cube {
+                    min,
+                    max,
+                    material: libro.clone(),  // Material de la pared
+                    has_shadow: true,
+                    is_transparent:false
+
+                });
+            }
             // Pared (sin ventanas)
             else {
                 objects.push(Cube {
@@ -276,8 +391,8 @@ let mut lights = vec![
         Vec3::new(0.0, 0.0, 0.0),  // center: El cubo está en el origen
         Vec3::new(0.0, 1.0, 0.0)   // up: El eje "arriba" sigue siendo el eje Y
     );
-    let rotation_speed = PI/10.0;
-    let zoom_speed = 1.0;
+    let rotation_speed = PI/8.0;
+    let zoom_speed = 1.5;
 
 
 
