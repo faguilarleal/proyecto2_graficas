@@ -7,6 +7,7 @@ pub struct Cube {
     pub max: Vec3, // La esquina opuesta del cubo
     pub material: Material,
     pub has_shadow: bool, 
+    pub is_transparent: bool, 
 }
 
 impl Cube {

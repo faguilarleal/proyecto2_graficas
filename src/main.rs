@@ -29,7 +29,7 @@ use texture::Texture;
 // texturas
 static DIRT_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/dirt.jpg")));
 static WATER_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/water.png")));
-static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.jpg")));
+static GLASS_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/glass2.png")));
 static LAVA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/lava.jpg")));
 static MADERA_TEXTURE: Lazy<Arc<Texture>> = Lazy::new(|| Arc::new(Texture::new("assets/madera.jpg")));
 
@@ -110,19 +110,18 @@ fn main() {
     WATER_TEXTURE.clone(), 
                 );
 
-            let madera = Material::new_with_texture(
-                1.0,
-                [0.9, 0.1, 0.0, 0.0],
-                0.0, MADERA_TEXTURE.clone(),           
-                 );
-                        
-
-                 let glass = Material::new_with_texture(
-                    10.0,                           // Especularidad baja
-                    [1.0, 1.0, 1.0, 0.05],          // Albedo con alta transparencia (0.05 en el canal alfa)
-                    1.5,                            // Índice de refracción del vidrio
-                    GLASS_TEXTURE.clone(),           // Textura de vidrio
-                );
+    let madera = Material::new_with_texture(
+    1.0,
+    [0.9, 0.1, 0.0, 0.0],
+    0.0, MADERA_TEXTURE.clone(),           
+        );
+                
+    let glass = Material::new_with_texture(
+        0.0,                           // Especularidad baja
+        [0.8, 0.2, 0.1, 0.6],          // Albedo con alta transparencia (0.05 en el canal alfa)
+        1.5,                            // Índice de refracción del vidrio
+        GLASS_TEXTURE.clone(),           // Textura de vidrio
+    );
 
     let lava= Material::new_with_texture(
         1.0,
@@ -135,7 +134,8 @@ fn main() {
 // Definir dos luces con diferentes posiciones
 let mut lights = vec![
     Light {
-        position: Vec3::new(0.0, 6.0, 10.0),  // Luz desde arriba (cara superior)
+        position: Vec3::new(1.0, 4.0, 10.0),  // Luz desde arriba (cara superior)
+        // position: Vec3::new(10.0, 10.0, 10.0),  // Luz desde arriba (cara superior)
         intensity: 1.0,
         color: Color::new(255, 255, 255),
     },
@@ -163,6 +163,7 @@ let mut lights = vec![
                     max,
                     material: lava.clone(), // Utiliza el mismo material para todos los cubos
                     has_shadow: true, 
+                    is_transparent:false
                 });
                 //  La luz emana desde la parte superior del cubo de lava
                 // let light_position = Vec3::new(
@@ -184,6 +185,7 @@ let mut lights = vec![
                     max,
                     material: dirt.clone(), // Utiliza el mismo material para todos los cubos
                     has_shadow: true, 
+                    is_transparent:false
 
                 });
             }
@@ -195,30 +197,32 @@ let mut lights = vec![
                     max,
                     material: dirt.clone(), // Utiliza el mismo material para todos los cubos
                     has_shadow: true, 
+                    is_transparent:false
                 
                 });
             }
         }
     }    
 
-    // for row in -2..-1{
-    //     for col in -2..-1{
-    //         let min = Vec3::new(col as f32 * cube_size, 1.0, row as f32 * cube_size);
-    //         let max = Vec3::new(
-    //             (col as f32 + 1.0) * cube_size,
-    //             cube_size+ 1.0,
-    //             (row as f32 + 1.0) * cube_size
-    //         );
+    for row in 1..2{
+        for col in 1..2{
+            let min = Vec3::new(col as f32 * cube_size, row as f32 +2.0* cube_size, -0.0);
+            let max = Vec3::new(
+                (col as f32 + 1.0) * cube_size,
+                (row as f32 + 3.0) * cube_size,
+                cube_size- 0.0
+            );
 
-    //         objects.push(Cube {
-    //             min,
-    //             max,
-    //             material: dirt.clone(), // Utiliza el mismo material para todos los cubos
-    //             has_shadow: true, 
-    //         });
-    //     }
-    // } 
+            objects.push(Cube {
+                min,
+                max,
+                material: dirt.clone(), // Utiliza el mismo material para todos los cubos
+                has_shadow: true, 
+                is_transparent:false
 
+            });
+        }
+    } 
 
     let wall_height = 5;  // Define la altura de la pared
   
@@ -242,7 +246,9 @@ let mut lights = vec![
                     min,
                     max,
                     material: glass.clone(),  // Material de la ventana
-                    has_shadow: true, 
+                    has_shadow: false, 
+                    is_transparent:true
+
                 });
             }
             // Pared (sin ventanas)
@@ -252,10 +258,14 @@ let mut lights = vec![
                     max,
                     material: madera.clone(),  // Material de la pared
                     has_shadow: true,
+                    is_transparent:false
+
                 });
             }
         }
     }
+    
+   
     
 
 

@@ -64,7 +64,6 @@ pub fn cast_shadow(
     intersect: &Intersect,
     light: &Light,
     objects: &[Cube],
-    has_shadow: bool, 
 ) -> f32 {
     let light_dir = (light.position - intersect.point).normalize();
     let light_distance = (light.position - intersect.point).magnitude();
@@ -73,19 +72,28 @@ pub fn cast_shadow(
     let mut shadow_intensity = 0.0;
 
     for object in objects {
-        if has_shadow == false{
+        // Solo considera objetos que proyectan sombras
+        if object.has_shadow {
             let shadow_intersect = object.ray_intersect(&shadow_ray_origin, &light_dir);
+
+            // Si hay una intersección y está dentro del rango de la luz
             if shadow_intersect.is_intersecting && shadow_intersect.distance < light_distance {
                 let distance_ratio = shadow_intersect.distance / light_distance;
-                shadow_intensity = 1.0 - distance_ratio.powf(2.0).min(1.0);
-                // print!("funciona");
-                break;
+
+                // Si el objeto es transparente, atenúa la sombra en función de la transparencia
+                if object.material.albedo[3] > 0.0 {
+                    // La luz pasa parcialmente según la transparencia del objeto
+                    shadow_intensity += (1.0 - object.material.albedo[3]) * (1.0 - distance_ratio.powf(2.0).min(1.0));
+                } else {
+                    // Si no es transparente, bloquea completamente la luz
+                    shadow_intensity = 1.0;
+                    break; // Salimos del bucle ya que la sombra es total
+                }
             }
         }
-        
     }
 
-    shadow_intensity
+    shadow_intensity.min(1.0) // Asegura que el valor de la sombra no sea mayor a 1.0
 }
 
 
@@ -101,6 +109,8 @@ pub fn cast_ray(
         return SKYBOX_COLOR;
     }
 
+    
+
     let mut intersect = Intersect::empty();
     let mut zbuffer = f32::INFINITY;
 
@@ -112,6 +122,8 @@ pub fn cast_ray(
             intersect = i;
         }
     }
+
+ 
 
     if !intersect.is_intersecting {
         return SKYBOX_COLOR;  // Fondo de cielo por defecto si no hay intersección
@@ -135,7 +147,7 @@ pub fn cast_ray(
         let view_dir = (ray_origin - intersect.point).normalize();
         let reflect_dir = reflect(&-light_dir, &intersect.normal).normalize();
 
-        let shadow_intensity = cast_shadow(&intersect, light, objects, false);
+        let shadow_intensity = cast_shadow(&intersect, light, objects);
         let light_intensity = light.intensity * (1.0 - shadow_intensity);
 
         // Componente difusa
